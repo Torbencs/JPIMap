@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset='utf-8' />
     <title></title>
@@ -10,81 +9,56 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css' rel='stylesheet' />
     <script src='https://npmcdn.com/csv2geojson@latest/csv2geojson.js'></script>
     <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
 
-        #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 100%;
-        }
-        .overlay {
-            position: absolute;
-        }
-
-        /* Popup styling */
-
-        .mapboxgl-popup {
-            padding-bottom: 5px;
-
-        }
-
-        .mapboxgl-popup-close-button {
-            display: none;
-        }
-
-        .mapboxgl-popup-content {
-            font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
-            padding: 0;
-            width: 550px;
-            height: 300px;
-        }
-
-        .mapboxgl-popup-content-wrapper {
-            padding: 1%;
-        }
-
-        .mapboxgl-popup-content h3 {
-            background: rgb(61, 59, 59);
-            text-align: center;
-            color: #fff;
-            margin: 0;
-            display: block;
-            padding: 15px;
-            font-weight: 700;
-            margin-top: -5px;
-        }
-
-        .mapboxgl-popup-content h4 {
-            margin: 0;
-            display: block;
-            padding: 10px 3px 10px 10px;
-            font-weight: 400;
-        }
-
-        .mapboxgl-container {
-            cursor: pointer;
-        }
-
-        .mapboxgl-popup-anchor-top>.mapboxgl-popup-content {
-            margin-top: 3px;
-        }
-
-        .mapboxgl-popup-anchor-top>.mapboxgl-popup-tip {
-            border-bottom-color: rgb(61, 59, 59);
-        }
-    </style>
+    <link href='/style.css' rel="stylesheet">
+<style>
+    select {
+        width: 250px;
+    }
+</style>
 </head>
 
 <body>
 
     <div id='map'></div>
-    <div class="overlay">Overlay content</div>
+    <div class="filter__container">
+        <h3>Filters</h3>
+    <div class="filter__field">
+        <p class="filter__field__title">Country</p>
+        <select id="select--country" multiple multiselect-search="true" multiselect-select-all="false" multiselect-max-items="4"
+            multiselect-hide-x="false" onchange="filterMap()">
+            <option selected value="Romania">Romania</option>
+            <option selected value="Netherlands">Netherlands</option>
+            <option selected value="Sweden">Sweden</option>
+            <option selected value="Spain">Spain</option>
+            <option selected value="France">France</option>
+        </select>
+    </div>
+    <div class="filter__field">
+        <p class="filter__field__title">Tag</p>
+        <select multiple multiselect-search="true" multiselect-select-all="false" multiselect-max-items="4"
+            multiselect-hide-x="false">
+            <option value="3">Romania</option>
+            <option value="4">Netherlands</option>
+            <option value="5">Sweden</option>
+            <option value="6">Spain</option>
+            <option value="3">Romania</option>
+            <option value="4">Netherlands</option>
+            <option value="5">Sweden</option>
+            <option value="6">Spain</option>
+            <option value="3">Romania</option>
+            <option value="4">Netherlands</option>
+            <option value="5">Sweden</option>
+            <option value="6">Spain</option>
+        </select>
+    </div>
+    <button type="button" class="btn btn-danger form__btn" onclick="resetFilters()">Reset Filters</button>
+    </div>
+
     <script>
+        
 
         var transformRequest = (url, resourceType) => {
             var isMapboxRequest =
@@ -103,51 +77,66 @@
             container: 'map', // container id
             style: 'mapbox://styles/torben-ax/clab6zb99001f14qlgoryl7ul', // YOUR TURN: choose a style: https://docs.mapbox.com/api/maps/#styles
             // starting position [lng, lat]
+            center: [2.214, 44.301],
             zoom: 10,// starting zoom
-            transformRequest: transformRequest
         });
 
         $(document).ready(function () {
             $.ajax({
                 type: "GET",
                 //YOUR TURN: Replace with csv export link
-                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTRl7MGozDKDt0-4bhsq0G8NNxukydvq0KVdMqTrDFZKgfNfx4SJE3QSVSnqxV0ee1ZNonNcXFx0k-c/pub?gid=0&single=true&output=csv',
+                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS627vU1UB5cMw0GkD1vlAGCSidlhAJcGeMGp9vCTEmTaK31tLQaGPZ7xkx_8s0KLlq-u1_ChYDxp9P/pub?gid=0&single=true&output=csv',
                 dataType: "text",
                 success: function (csvData) { 
                     //console.log(csvData)
                     makeGeoJSON(csvData); 
                 }
             });
+            
+        
 
         map.on('click', 'csvData', function (e) {
-                console.log('click')
 
-                map.flyTo({
-                    center: e.features[0].geometry.coordinates
-                });
-                var coordinates = e.features[0].geometry.coordinates.slice();
-                console.log(coordinates)
+            let feature = map.queryRenderedFeatures(e.point)[0]
+           
 
-                //set popup text
-                //You can adjust the values of the popup to match the headers of your CSV.
-                // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
-                var description = `<h3>` + e.features[0].properties.Name + `</h3>` + `<h4>` + `<b>` + `Address: ` + `</b>` + e.features[0].properties.Address + `</h4>` + `<h4>` + `<b>` + `Phone: ` + `</b>` + e.features[0].properties.Phone + `</h4>`;
 
-                // Ensure that if the map is zoomed out such that multiple
-                // copies of the feature are visible, the popup appears
-                // over the copy being pointed to.
-                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-                }
+            
 
-                //add Popup to map
+            map.flyTo({
+                center: feature.geometry.coordinates
+            });
+            var coordinates = feature.geometry.coordinates.slice();
+            
 
-                let popup = new mapboxgl.Popup({ anchor: 'left' })
-                    .setLngLat(coordinates)
-                    .setHTML(description)
-                    .addTo(map);
+            //set popup text
+            //You can adjust the values of the popup to match the headers of your CSV.
+            // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
+            var description = `<h3>` + feature.properties.Title + `</h3>` + `<h4>` + `<b>` + `Address: ` + `</b>` + feature.properties.Country + `</h4>` + `<h4>` + `<b>` + `Phone: ` + `</b>` + feature.properties.Phone + `</h4>`;
+
+         
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            //add Popup to map
+            let popup = new mapboxgl.Popup({ anchor: 'left' })
+                .setLngLat(coordinates)
+                .setHTML(description)
+                .addTo(map);
+            
+            popup.on('close', ()=>{
+                
+                //element.style.visibility = 'hidden';
+                
+            })
 
             });
+
+            
 
             
             // Change the cursor to a pointer when the mouse is over the places layer.
@@ -162,15 +151,12 @@
 
 
             function makeGeoJSON(csvData) {
-                console.log('run')
                 csv2geojson.csv2geojson(csvData, {
-                    latfield: 'Latitude',
-                    lonfield: 'Longitude',
+                    latfield: 'Marker Lat',
+                    lonfield: 'Marker Lng',
                     delimiter: ','
                 }, function (err, data) {
-                    console.log('map load', data)
                  
-                        
                         //Add the the layer to the map
                         map.addLayer({
                             'id': 'csvData',
@@ -184,12 +170,7 @@
                                 'circle-color': "purple"
                             }
                         });
-
-
-                        // When a click event occurs on a feature in the csvData layer, open a popup at the
-                        // location of the feature, with description HTML from its properties.
                         
-
                         
 
                         var bbox = turf.bbox(data);
@@ -202,10 +183,34 @@
         });
 
 
+        function filterMap(){
+            const select = document.querySelector("#select--country");
+            const data = [...select.options].filter((option) => option.selected).map(option => option.text);
+            
+          
+            searchFilter = [
+                "any",
+            ]
+            
+            data.forEach(option => searchFilter.push(["in", option, ['get', 'Country']]))
+            console.log(searchFilter);
+                
+            map.setFilter('csvData', searchFilter);
+
+
+            
+        }
+       
+        function resetFilters(){
+            let el = document.querySelector("#select--country");
+            console.log(el.checked);
+        }
+
+
 
 
     </script>
-
+<script src="requirements/multiSelect.js"></script>
 </body>
 
 </html>
