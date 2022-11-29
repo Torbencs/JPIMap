@@ -37,7 +37,7 @@
         </select>
     </div>
     <div class="filter__field">
-        <p class="filter__field__title">Tag</p>
+        <p class="filter__field__title">Domain</p>
         <select multiple multiselect-search="true" multiselect-select-all="false" multiselect-max-items="4"
             multiselect-hide-x="false">
             <option value="3">Romania</option>
@@ -53,12 +53,26 @@
             <option value="5">Sweden</option>
             <option value="6">Spain</option>
         </select>
-    </div>
+        <div class="filter__field">
+            <p class="filter__field__title">Tag</p>
+            <select id="select--tag" multiple multiselect-search="true" multiselect-select-all="false" multiselect-max-items="4"
+                multiselect-hide-x="false" onchange="filterMap()">
+                <option value="Sustainability">Sustainability</option>
+                <option value="Economy">Economy</option>
+                <option value="Urban Infrastructure">Urban Infrastructure</option>
+                <option value="Gardens">Gardens</option>
+                <option value="Environment">Environment</option>
+                <option value="Food">Food</option>
+                
+            </select>
+
+    <!--Reset Filters -->
+    <!-- </div>
     <button type="button" class="btn btn-danger form__btn" onclick="resetFilters()">Reset Filters</button>
-    </div>
+    </div> -->
 
     <script>
-        
+        let geoJsonData;
 
         var transformRequest = (url, resourceType) => {
             var isMapboxRequest =
@@ -70,7 +84,6 @@
                     : url
             };
         };
-        //YOUR TURN: add your Mapbox token
 
         mapboxgl.accessToken = 'pk.eyJ1IjoidG9yYmVuLWF4IiwiYSI6ImNsYTl3NmMzYzAyazEzbmxmcXhuY3dyOTAifQ.Hwi6siB-ZyUMQk8RUzmkiQ'; //Mapbox token 
         var map = new mapboxgl.Map({
@@ -92,125 +105,219 @@
                     makeGeoJSON(csvData); 
                 }
             });
-            
-        
 
-        map.on('click', 'csvData', function (e) {
+            //Click on a cluster of points
+            map.on('click', 'clusters', (e) => {
+                const features = map.queryRenderedFeatures(e.point, {
+                    layers: ['clusters']
+                });
+                const clusterId = features[0].properties.cluster_id;
+                map.getSource('points').getClusterExpansionZoom(
+                    clusterId,
+                    (err, zoom) => {
+                        if (err) return;
 
-            let feature = map.queryRenderedFeatures(e.point)[0]
-           
-
-
-            
-
-            map.flyTo({
-                center: feature.geometry.coordinates
-            });
-            var coordinates = feature.geometry.coordinates.slice();
-            
-
-            //set popup text
-            //You can adjust the values of the popup to match the headers of your CSV.
-            // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
-            var description = `<h3>` + feature.properties.Title + `</h3>` + `<h4>` + `<b>` + `Address: ` + `</b>` + feature.properties.Country + `</h4>` + `<h4>` + `<b>` + `Phone: ` + `</b>` + feature.properties.Phone + `</h4>`;
-
-         
-            // Ensure that if the map is zoomed out such that multiple
-            // copies of the feature are visible, the popup appears
-            // over the copy being pointed to.
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
-
-            //add Popup to map
-            let popup = new mapboxgl.Popup({ anchor: 'left' })
-                .setLngLat(coordinates)
-                .setHTML(description)
-                .addTo(map);
-            
-            popup.on('close', ()=>{
-                
-                //element.style.visibility = 'hidden';
-                
-            })
-
+                        map.easeTo({
+                            center: features[0].geometry.coordinates,
+                            zoom: zoom
+                        });
+                    }
+                );
             });
 
-            
+            //Click on unclusters point
+            map.on('click', 'unclustered-point', function (e) {
 
-            
-            // Change the cursor to a pointer when the mouse is over the places layer.
-            map.on('mouseenter', 'csvData', function () {
+                let feature = map.queryRenderedFeatures(e.point)[0]    
+
+                map.flyTo({
+                    center: feature.geometry.coordinates
+                });
+                var coordinates = feature.geometry.coordinates.slice();
+
+              
+                // Ensure that if the map is zoomed out such that
+                // multiple copies of the feature are visible, the
+                // popup appears over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
+
+                new mapboxgl.Popup({anchor: 'left'})
+                    .setLngLat(coordinates)
+                    .setHTML(`<h2 class="popup__title">${feature.properties.Title}</h2>
+                    <div class="popup__subtitle">${feature.properties.Country}</div>
+                    <div class="popup__categories">${feature.properties.Categories}</div>
+                    <hr class="card"/>
+                    <div class="popup__description">${feature.properties.Description}</div>`)
+                    .addTo(map);
+
+            });
+
+
+            // Change the cursor to a pointer when the mouse is over the cluster layer.
+            map.on('mouseenter', 'clusters', function () {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
             // Change it back to a pointer when it leaves.
-            map.on('mouseleave', 'places', function () {
+            map.on('mouseleave', 'clusters', function () {
+                map.getCanvas().style.cursor = '';
+            });
+            // Change the cursor to a pointer when the mouse is over a single unclustered point.
+            map.on('mouseenter', 'unclustered-point', function () {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'unclustered-point', function () {
                 map.getCanvas().style.cursor = '';
             });
 
 
-            function makeGeoJSON(csvData) {
+     }); //End of Document ready
+
+        function makeGeoJSON(csvData) {
+            
                 csv2geojson.csv2geojson(csvData, {
                     latfield: 'Marker Lat',
                     lonfield: 'Marker Lng',
                     delimiter: ','
                 }, function (err, data) {
-                 
-                        //Add the the layer to the map
-                        map.addLayer({
-                            'id': 'csvData',
-                            'type': 'circle',
-                            'source': {
-                                'type': 'geojson',
-                                'data': data
-                            },
-                            'paint': {
-                                'circle-radius': 5,
-                                'circle-color': "purple"
-                            }
-                        });
-                        
-                        
 
-                        var bbox = turf.bbox(data);
-                        map.fitBounds(bbox, { padding: 50 });
+                    geoJsonData = data;
+                    map.addSource('points', {
+                        type: 'geojson',
+                        data: data,
+                        cluster: true,
+                        clusterMaxZoom: 9, // Max zoom to cluster points on
+                        clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
+                        //filter: ["in", 'France', ['get', 'Country']]
+                    });
+                    map.addLayer({
+                        id: 'clusters',
+                        type: 'circle',
+                        source: 'points',
+                        filter: ['has', 'point_count'],
+                        paint: {
+                            // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+                            // with three steps to implement three types of circles:
+                            //   * Blue, 20px circles when point count is less than 100
+                            //   * Yellow, 30px circles when point count is between 100 and 750
+                            //   * Pink, 40px circles when point count is greater than or equal to 750
+                            'circle-color': [
+                                'step',
+                                ['get', 'point_count'],
+                                '#51bbd6',
+                                7,
+                                '#FFD166',
+                                18,
+                                '#DB7093'
+                            ],
+                            'circle-radius': [
+                                'step',
+                                ['get', 'point_count'],
+                                20,
+                                5,
+                                30,
+                                10,
+                                40
+                            ]
+                        }
+                    });
 
-                    
+                    map.addLayer({
+                        id: 'cluster-count',
+                        type: 'symbol',
+                        source: 'points',
+                        filter: ['has', 'point_count'],
+                        layout: {
+                            'text-field': '{point_count_abbreviated}',
+                            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                            'text-size': 17
+                        }
+                    });
+
+                    map.addLayer({
+                        id: 'unclustered-point',
+                        type: 'circle',
+                        source: 'points',
+                        filter: ['!', ['has', 'point_count']],
+                        paint: {
+                            'circle-color': '#11b4da',
+                            'circle-radius': 8,
+                        }
+                    });
+
+
+                    var bbox = turf.bbox(data);
+                    map.fitBounds(bbox, { padding: 50 });
+
+
 
                 });
             };
-        });
-
 
         function filterMap(){
+
+            //Look for any popups open on page
+            let popup = document.getElementsByClassName('mapboxgl-popup')
+            //If popups are open close them before filtering
+            if (popup.length){
+                popup[0].remove();
+            }
+
             const select = document.querySelector("#select--country");
-            const data = [...select.options].filter((option) => option.selected).map(option => option.text);
+            const filterArr = [...select.options].filter((option) => option.selected).map(option => option.text);
             
-          
-            searchFilter = [
-                "any",
-            ]
+            const select1 = document.querySelector("#select--tag");
+            const filterArr2 = [...select1.options].filter((option) => option.selected).map(option => option.text);
             
-            data.forEach(option => searchFilter.push(["in", option, ['get', 'Country']]))
-            console.log(searchFilter);
-                
-            map.setFilter('csvData', searchFilter);
+            filterArr.push(...filterArr2)
+        
+            map.getSource('points').setData(filterCollection(geoJsonData, filterArr))
+            
+            function filterCollection(collection, filters) {
+               let featuresArr = [];
+                //Loop through geojson features
+                for (var i = 0; i < collection.features.length; i++) {
+                    //Loop through feature properties
+                    for (const property in collection.features[i].properties) {
+                        //Loop through filters array
+                        for (const filter of filters){
+                            //Check if filter value is in features 
+                            if (filter == collection.features[i].properties[property]){
+                                featuresArr.push(collection.features[i]);
+                            }
+                        }
+                    }
 
+                }
 
-            
+                let filteredFeatures = featuresArr.filter((el, index, self) =>
+                    index === self.findIndex((el2) => (
+                        //TO DO, Change so that it checks id of elements instead of title
+                        el2.properties.Title === el.properties.Title
+                    ))
+                )
+                return {
+                    "type": "FeatureCollection",
+                    features: filteredFeatures
+                };
+            }
+        
         }
        
         function resetFilters(){
             let el = document.querySelector("#select--country");
-            console.log(el.checked);
+          
         }
 
 
 
 
     </script>
-<script src="requirements/multiSelect.js"></script>
+<script type="text/javascript" src="/requirements/multiSelect.js"></script>
 </body>
 
 </html>
