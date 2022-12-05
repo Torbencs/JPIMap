@@ -37,39 +37,20 @@
         </select>
     </div>
     <div class="filter__field">
-        <p class="filter__field__title">Domain</p>
-        <select multiple multiselect-search="true" multiselect-select-all="false" multiselect-max-items="4"
-            multiselect-hide-x="false">
-            <option value="3">Romania</option>
-            <option value="4">Netherlands</option>
-            <option value="5">Sweden</option>
-            <option value="6">Spain</option>
-            <option value="3">Romania</option>
-            <option value="4">Netherlands</option>
-            <option value="5">Sweden</option>
-            <option value="6">Spain</option>
-            <option value="3">Romania</option>
-            <option value="4">Netherlands</option>
-            <option value="5">Sweden</option>
-            <option value="6">Spain</option>
-        </select>
-        <div class="filter__field">
             <p class="filter__field__title">Tag</p>
             <select id="select--tag" multiple multiselect-search="true" multiselect-select-all="false" multiselect-max-items="4"
                 multiselect-hide-x="false" onchange="filterMap()">
                 <option value="Sustainability">Sustainability</option>
+                <option value="Climate Change">Climate Change</option>
                 <option value="Economy">Economy</option>
                 <option value="Urban Infrastructure">Urban Infrastructure</option>
                 <option value="Gardens">Gardens</option>
                 <option value="Environment">Environment</option>
                 <option value="Food">Food</option>
-                
             </select>
+    </div>
+    </div>
 
-    <!--Reset Filters -->
-    <!-- </div>
-    <button type="button" class="btn btn-danger form__btn" onclick="resetFilters()">Reset Filters</button>
-    </div> -->
 
     <script>
         let geoJsonData;
@@ -127,27 +108,29 @@
 
             //Click on unclusters point
             map.on('click', 'unclustered-point', function (e) {
-
-                let feature = map.queryRenderedFeatures(e.point)[0]    
-
+                //Get clicked feature
+                let feature = map.queryRenderedFeatures(e.point)[0]     
+                //Get coordinates from feature 
+                var coordinates = feature.geometry.coordinates.slice();
+                //Get category list in a readable formate
+                //Mapbox stringifies the whole category array so we need to remove array brackets and apostrophes to make readable
+                let categories = feature.properties.Categories.slice(1,-1).replace(/"/g, '')
+                //Move view to clicked feature location
                 map.flyTo({
                     center: feature.geometry.coordinates
                 });
-                var coordinates = feature.geometry.coordinates.slice();
-
-              
-                // Ensure that if the map is zoomed out such that
-                // multiple copies of the feature are visible, the
+                // Ensure that if the map is zoomed out such that multiple copies of the feature are visible, the
                 // popup appears over the copy being pointed to.
                 while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
                 }
 
+                //Create new popup, set coordinates and html, then add to map.  
                 new mapboxgl.Popup({anchor: 'left'})
                     .setLngLat(coordinates)
                     .setHTML(`<h2 class="popup__title">${feature.properties.Title}</h2>
                     <div class="popup__subtitle">${feature.properties.Country}</div>
-                    <div class="popup__categories">${feature.properties.Categories}</div>
+                    <div class="popup__categories">${categories}</div>
                     <hr class="card"/>
                     <div class="popup__description">${feature.properties.Description}</div>`)
                     .addTo(map);
@@ -177,6 +160,11 @@
 
      }); //End of Document ready
 
+        /**
+         * Adds map source and cluster layers.
+         *
+         * @param {JSON} csvData The number to raise.
+         */
         function makeGeoJSON(csvData) {
             
                 csv2geojson.csv2geojson(csvData, {
@@ -184,16 +172,21 @@
                     lonfield: 'Marker Lng',
                     delimiter: ','
                 }, function (err, data) {
+                    //Convert the category string to an array 
+                    let newData = convertTags(data);
 
-                    geoJsonData = data;
+                    //Save the geojson data to a new variable to use for filtering
+                    geoJsonData = newData;
+                    //Add geoJson as Mapbox source
                     map.addSource('points', {
                         type: 'geojson',
-                        data: data,
+                        data: newData,
                         cluster: true,
                         clusterMaxZoom: 9, // Max zoom to cluster points on
                         clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
-                        //filter: ["in", 'France', ['get', 'Country']]
+                        
                     });
+                    //Add cluster layer
                     map.addLayer({
                         id: 'clusters',
                         type: 'circle',
@@ -225,7 +218,7 @@
                             ]
                         }
                     });
-
+                    //Add symbol layer to how many features are in a cluster
                     map.addLayer({
                         id: 'cluster-count',
                         type: 'symbol',
@@ -237,7 +230,8 @@
                             'text-size': 17
                         }
                     });
-
+                    //Add the individual fature points
+                    //Shown when map is zoomed and clusters do not have point count
                     map.addLayer({
                         id: 'unclustered-point',
                         type: 'circle',
@@ -249,8 +243,9 @@
                         }
                     });
 
-
-                    var bbox = turf.bbox(data);
+                    //Find location bounding box of points 
+                    var bbox = turf.bbox(newData);
+                    //Move map to this bounding box. ie, center map over points
                     map.fitBounds(bbox, { padding: 50 });
 
 
@@ -258,59 +253,90 @@
                 });
             };
 
+        /**
+         * Gets inputs from the filter div select fields and filters points on the map.
+         *
+         */
         function filterMap(){
-
             //Look for any popups open on page
             let popup = document.getElementsByClassName('mapboxgl-popup')
             //If popups are open close them before filtering
-            if (popup.length){
-                popup[0].remove();
-            }
-
+            popup.length && popup[0].remove();
+            
+            //Get the country select html element
             const select = document.querySelector("#select--country");
-            const filterArr = [...select.options].filter((option) => option.selected).map(option => option.text);
-            
+            //Destructure select options array, filter to include only selected inputs, assign only the text to the array
+            const countryArr = [...select.options].filter((option) => option.selected).map(option => option.text);
+            //Get the tag select html element
             const select1 = document.querySelector("#select--tag");
-            const filterArr2 = [...select1.options].filter((option) => option.selected).map(option => option.text);
+            //Destructure select1 options array, filter to include only selected inputs, assign only the text to the array
+            const tagArr = [...select1.options].filter((option) => option.selected).map(option => option.text);
             
-            filterArr.push(...filterArr2)
         
-            map.getSource('points').setData(filterCollection(geoJsonData, filterArr))
+            //Due to Mapbox's limited ability to filter we must filter the geoJsonData object and then set this new filtered data as the map source. 
+            map.getSource('points').setData(filterCollection(geoJsonData, countryArr, tagArr))
             
-            function filterCollection(collection, filters) {
-               let featuresArr = [];
+            /**
+             * Filter given geoJsonData by the supplied arrays 
+             * 
+             * @param {geoJson}
+             * @param {array}
+             * @param {array}
+             */
+            function filterCollection(collection, countryArr, tagArr) {
+                let featuresArr = [];
                 //Loop through geojson features
                 for (var i = 0; i < collection.features.length; i++) {
-                    //Loop through feature properties
-                    for (const property in collection.features[i].properties) {
-                        //Loop through filters array
-                        for (const filter of filters){
-                            //Check if filter value is in features 
-                            if (filter == collection.features[i].properties[property]){
-                                featuresArr.push(collection.features[i]);
-                            }
+                    //Loop through country array
+                    for (const country of countryArr){
+                        //Check if country is in features and push that feature to features array 
+                        if (country == collection.features[i].properties.Country){
+                            featuresArr.push(collection.features[i]);
                         }
                     }
-
+                }
+                //Check if there are no tags selected and return all features currently in feature array
+                if (tagArr.length < 1){
+                    //Return in geoJson format
+                    return {
+                        "type": "FeatureCollection",
+                        features: featuresArr
+                    }
                 }
 
-                let filteredFeatures = featuresArr.filter((el, index, self) =>
-                    index === self.findIndex((el2) => (
-                        //TO DO, Change so that it checks id of elements instead of title
-                        el2.properties.Title === el.properties.Title
-                    ))
-                )
+                //Create new array for features that have both the selected country and tag 
+                let newArr = []
+                //Loop through features array (currently filled with all matching countries)
+                for (var i=0; i < featuresArr.length; i++){
+                    //Loop through tag array
+                    for (const tag of tagArr) {
+                        //Check if categories array inside features array contains the current tag 
+                        if(featuresArr[i].properties.Categories.some(el => el.toLowerCase().includes(tag.toLowerCase()))){
+                            newArr.push(featuresArr[i]);
+                            //If this feature contains the current tag, break and continue with next feature
+                            break;
+                        }
+                    }
+                }
+                //Return newArr with filtered points in geoJson format
                 return {
                     "type": "FeatureCollection",
-                    features: filteredFeatures
+                    features: newArr
                 };
             }
         
         }
-       
-        function resetFilters(){
-            let el = document.querySelector("#select--country");
-          
+       /**
+        *Splits the string of categories on the given geoJson to an array and returns this new geoJson  
+        * @param {geoJson}
+        */
+        function convertTags(data){
+            //Loop through geoJson features 
+            for(let i = 0; i < data.features.length; i++){
+                //Split the comma seperated string to array of strings and reasign to categories property  
+                data.features[i].properties.Categories = data.features[i].properties.Categories.split(',');
+            }
+            return data
         }
 
 
