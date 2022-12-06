@@ -55,21 +55,21 @@
     <script>
         let geoJsonData;
 
-        var transformRequest = (url, resourceType) => {
-            var isMapboxRequest =
-                url.slice(8, 22) === "api.mapbox.com" ||
-                url.slice(10, 26) === "tiles.mapbox.com";
-            return {
-                url: isMapboxRequest
-                    ? url.replace("?", "?pluginName=sheetMapper&")
-                    : url
-            };
-        };
+        // var transformRequest = (url, resourceType) => {
+        //     var isMapboxRequest =
+        //         url.slice(8, 22) === "api.mapbox.com" ||
+        //         url.slice(10, 26) === "tiles.mapbox.com";
+        //     return {
+        //         url: isMapboxRequest
+        //             ? url.replace("?", "?pluginName=sheetMapper&")
+        //             : url
+        //     };
+        // };
 
         mapboxgl.accessToken = 'pk.eyJ1IjoidG9yYmVuLWF4IiwiYSI6ImNsYTl3NmMzYzAyazEzbmxmcXhuY3dyOTAifQ.Hwi6siB-ZyUMQk8RUzmkiQ'; //Mapbox token 
         var map = new mapboxgl.Map({
             container: 'map', // container id
-            style: 'mapbox://styles/torben-ax/clab6zb99001f14qlgoryl7ul', // YOUR TURN: choose a style: https://docs.mapbox.com/api/maps/#styles
+            style: 'mapbox://styles/torben-ax/clbam1k9z001415p2uytt57hi',
             // starting position [lng, lat]
             center: [2.214, 44.301],
             zoom: 10,// starting zoom
@@ -126,7 +126,7 @@
                 }
 
                 //Create new popup, set coordinates and html, then add to map.  
-                new mapboxgl.Popup({anchor: 'left'})
+                new mapboxgl.Popup({anchor: 'left', maxWidth: '600px'})
                     .setLngLat(coordinates)
                     .setHTML(`<h2 class="popup__title">${feature.properties.Title}</h2>
                     <div class="popup__subtitle">${feature.properties.Country}</div>

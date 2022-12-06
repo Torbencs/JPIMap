@@ -42,7 +42,7 @@ hr.card {
      display: none;
  }
 .mapboxgl-popup-anchor-left{
-    max-width: 600px !important;
+    
 }
  .mapboxgl-popup-content {
      padding: 20px;
