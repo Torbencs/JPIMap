@@ -22,7 +22,7 @@
 <body>
 
     <div id='map'></div>
-    <div class="sideNav">
+    <div id="sideNav">
         <div class="filter__container">
                 <h3>European Initiatives</h3>
             <div class="filter__field">
@@ -68,8 +68,8 @@
             container: 'map', // container id
             style: 'mapbox://styles/torben-ax/clbam1k9z001415p2uytt57hi',
             // starting position [lng, lat]
-            center: [2.214, 44.301],
-            zoom: 10,// starting zoom
+            center: [9.549, 48.919],
+            zoom: 5,// starting zoom
         });
 
         $(document).ready(function () {
@@ -141,8 +141,6 @@
                     .addTo(map);
 
             });
-
-
             // Change the cursor to a pointer when the mouse is over the cluster layer.
             map.on('mouseenter', 'clusters', function () {
                 map.getCanvas().style.cursor = 'pointer';
@@ -174,7 +172,7 @@
                 let list = document.getElementById('sideNav__list');
                 //Remove current items from list
                 list.innerHTML = "";
-                //For each feature in supplied geoJson make a list item and add it to the element
+                //For each feature in supplied geoJson make a list item and add it to the list element
                 data.features.forEach(element => {
                     let li = document.createElement("li");
                     li.innerText = element.properties.Title;
@@ -257,11 +255,10 @@
                             'circle-color': [
                                 'step',
                                 ['get', 'point_count'],
-                                '#51bbd6',
-                                7,
-                                '#FFD166',
-                                18,
-                                '#DB7093'
+                                '#C87A7A',
+                                10,
+                                '#56889D',
+                                
                             ],
                             'circle-radius': [
                                 'step',
@@ -294,15 +291,10 @@
                         source: 'points',
                         filter: ['!', ['has', 'point_count']],
                         paint: {
-                            'circle-color': '#11b4da',
+                            'circle-color': '#5E5151',
                             'circle-radius': 8,
                         }
                     });
-
-                    //Find location bounding box of points 
-                    var bbox = turf.bbox(newData);
-                    //Move map to this bounding box. ie, center map over points
-                    map.fitBounds(bbox, { padding: 50 });
 
                     //Populate the sidebar nav list with features
                     setNavList(newData)
@@ -338,7 +330,7 @@
 
                 //Get the country select html element
                 const select = document.querySelector("#select--country");
-                //Destructure select options array, filter to include only selected inputs, assign only the text to the array
+                //Destructure the select options array, filter to include only selected inputs, assign only the text to the array
                 const countryArr = [...select.options].filter((option) => option.selected).map(option => option.text);
                 //Get the tag select html element
                 const select1 = document.querySelector("#select--tag");
@@ -348,6 +340,9 @@
 
                 //Due to Mapbox's limited ability to filter we must filter the geoJsonData object and then set this new filtered data as the map source. 
                 let filteredGeoJson = filterCollection(geoJsonData, countryArr, tagArr);
+                //Set map view to filtered points. Offset the left side by adding a padding equal to the sidebar navigation. Add 70px padding to all sides so the points aren't at the edge of the screen
+                map.fitBounds(turf.bbox(filteredGeoJson), { padding: {left: document.getElementById('sideNav').offsetWidth + 70, top: 70, right: 70, bottom: 70 }});
+                //Set map source to new filtered data points
                 map.getSource('points').setData(filteredGeoJson);
                 //Update the sideNav with the filtered features
                 setNavList(filteredGeoJson);
