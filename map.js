@@ -7,18 +7,18 @@ var map = new mapboxgl.Map({
   container: "map", // container id
   style: "mapbox://styles/torben-ax/clbam1k9z001415p2uytt57hi",
   // starting position [lng, lat]
-  center: [9.549, 48.919],
-  zoom: 5, // starting zoom
+  center: [8.169, 51.919],
+  zoom: 4.2, // starting zoom
 });
 map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
+//Ajax request to get data from the google sheet
 $(document).ready(function () {
   $.ajax({
     type: "GET",
     url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRl7MGozDKDt0-4bhsq0G8NNxukydvq0KVdMqTrDFZKgfNfx4SJE3QSVSnqxV0ee1ZNonNcXFx0k-c/pub?gid=0&single=true&output=csv",
     dataType: "text",
     success: function (csvData) {
-      //console.log(csvData)
       makeGeoJSON(csvData);
     },
   });
