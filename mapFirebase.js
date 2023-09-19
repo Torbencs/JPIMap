@@ -75,6 +75,7 @@ $(document).ready(async function () {
   ////////////////////////////
 
   geoJsonData = await getData();
+  console.log(geoJsonData);
 
   map.on("load", () => {
     updateMap(geoJsonData);
