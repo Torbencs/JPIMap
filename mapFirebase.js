@@ -61,7 +61,7 @@ $(document).ready(async function () {
   //Query example
   ///////////////
 
-  const q = query(
+  /*   const q = query(
     collection(db, "initiatives"),
     where("properties.Title", "==", "Week")
   );
@@ -71,16 +71,16 @@ $(document).ready(async function () {
     // doc.data() is never undefined for query doc snapshots
     console.log(doc.id, " => ", doc.data());
   });
-
+ */
   ////////////////////////////
 
   geoJsonData = await getData();
-  console.log(geoJsonData);
 
   map.on("load", () => {
     updateMap(geoJsonData);
 
     setNavList(geoJsonData);
+
     map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
     map.on("style.load", () => {
@@ -141,10 +141,18 @@ $(document).ready(async function () {
       .setLngLat(coordinates)
       .setHTML(
         `<h2 class="popup__title">${feature.properties.Title}</h2>
-                    <div class="popup__subtitle">${feature.properties.Country}</div>
+                    <div class="popup__subtitle">${
+                      feature.properties.Country
+                    }</div>
                     <div class="popup__categories">${categories}</div>
                     <hr class="card"/>
-                    <div class="popup__description">${feature.properties.Description}</div>`
+                    <div class="popup__description">${
+                      feature.properties.Description
+                    }</div>
+                    ${
+                      feature.properties.Url &&
+                      `<div class="popup__link">${feature.properties.Url}</div>`
+                    }`
       )
       .addTo(map);
   });
