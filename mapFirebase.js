@@ -151,7 +151,7 @@ $(document).ready(async function () {
                     }</div>
                     ${
                       feature.properties.Url &&
-                      `<div class="popup__link">${feature.properties.Url}</div>`
+                      `<a href=${feature.properties.Url} class="popup__link">Visit website</a>`
                     }`
       )
       .addTo(map);
