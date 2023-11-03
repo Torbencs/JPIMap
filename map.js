@@ -23,11 +23,6 @@ $(document).ready(function () {
     },
   });
 
-  //Add source and layers when the basemap style layer changes
-  map.on("style.load", () => {
-    geoJsonData && updateMap(geoJsonData);
-  });
-
   //Click on a cluster of points
   map.on("click", "clusters", (e) => {
     const features = map.queryRenderedFeatures(e.point, {
@@ -105,18 +100,6 @@ $(document).ready(function () {
   map.on("mouseleave", "unclustered-point", function () {
     map.getCanvas().style.cursor = "";
   });
-
-  //Satellite mapstyle
-  document.getElementById("satellite-toggle").onclick = () => {
-    map.setStyle("mapbox://styles/torben-ax/clilfkto700ht01r1cc253r1v");
-    document.getElementById("sat-check").classList.add("checked");
-    document.getElementById("default-check").classList.remove("checked");
-  };
-  document.getElementById("default-toggle").onclick = () => {
-    map.setStyle("mapbox://styles/torben-ax/clbam1k9z001415p2uytt57hi");
-    document.getElementById("default-check").classList.add("checked");
-    document.getElementById("sat-check").classList.remove("checked");
-  };
 });
 //End of Document ready
 
@@ -173,7 +156,7 @@ function setNavList(data) {
 /**
  * Adds map source and cluster layers.
  *
- * @param {JSON} csvData
+ * @param {JSON} csvData The number to raise.
  */
 function makeGeoJSON(csvData) {
   csv2geojson.csv2geojson(
@@ -185,10 +168,61 @@ function makeGeoJSON(csvData) {
     },
     function (err, data) {
       //Convert the category property which is one long string to an array of values
-      geoJsonData = convertTags(data);
-      updateMap(geoJsonData);
+      let newData = convertTags(data);
+
+      //Save the geojson data to a new variable to use for filtering
+      geoJsonData = newData;
+      //Add geoJson as Mapbox source
+      map.addSource("points", {
+        type: "geojson",
+        data: newData,
+        cluster: true,
+        clusterMaxZoom: 9, // Max zoom to cluster points on
+        clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
+      });
+      //Add cluster layer
+      map.addLayer({
+        id: "clusters",
+        type: "circle",
+        source: "points",
+        filter: ["has", "point_count"],
+        paint: {
+          // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+          // with three steps to implement three types of circles:
+          //   * Blue, 20px circles when point count is less than 100
+          //   * Yellow, 30px circles when point count is between 100 and 750
+          //   * Pink, 40px circles when point count is greater than or equal to 750
+          "circle-color": "#dc5734",
+          "circle-radius": ["step", ["get", "point_count"], 20, 5, 30, 10, 40],
+        },
+      });
+      //Add symbol layer to how many features are in a cluster
+      map.addLayer({
+        id: "cluster-count",
+        type: "symbol",
+        source: "points",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+          "text-size": 17,
+        },
+      });
+      //Add the individual fature points
+      //Shown when map is zoomed and clusters do not have point count
+      map.addLayer({
+        id: "unclustered-point",
+        type: "circle",
+        source: "points",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": "#dc5734",
+          "circle-radius": 10,
+        },
+      });
+
       //Populate the sidebar nav list with features
-      setNavList(geoJsonData);
+      setNavList(newData);
     }
   );
 }
@@ -297,55 +331,4 @@ function filterMap() {
       features: newArr,
     };
   }
-}
-
-function updateMap(data) {
-  //Add geoJson as Mapbox source
-  map.addSource("points", {
-    type: "geojson",
-    data: data,
-    cluster: true,
-    clusterMaxZoom: 9, // Max zoom to cluster points on
-    clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
-  });
-  //Add cluster layer
-  map.addLayer({
-    id: "clusters",
-    type: "circle",
-    source: "points",
-    filter: ["has", "point_count"],
-    paint: {
-      // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-      // with three steps to implement three types of circles:
-      //   * Blue, 20px circles when point count is less than 100
-      //   * Yellow, 30px circles when point count is between 100 and 750
-      //   * Pink, 40px circles when point count is greater than or equal to 750
-      "circle-color": "#dc5734",
-      "circle-radius": ["step", ["get", "point_count"], 20, 5, 30, 10, 40],
-    },
-  });
-  //Add symbol layer to how many features are in a cluster
-  map.addLayer({
-    id: "cluster-count",
-    type: "symbol",
-    source: "points",
-    filter: ["has", "point_count"],
-    layout: {
-      "text-field": "{point_count_abbreviated}",
-      "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-      "text-size": 17,
-    },
-  });
-  //Add the individual fature points
-  //Shown when map is zoomed and clusters do not have point count
-  map.addLayer({
-    id: "unclustered-point",
-    type: "circle",
-    source: "points",
-    filter: ["!", ["has", "point_count"]],
-    paint: {
-      "circle-color": "#dc5734",
-      "circle-radius": 10,
-    },
-  });
 }
