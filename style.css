@@ -100,7 +100,7 @@ hr.card {
     width: 350px;
     height: 100%;
     padding: 20px 30px 45px;
-    background-color: #fff5e8;
+    background-color: #fff;
     display: flex;
     flex-direction: column;
 }
