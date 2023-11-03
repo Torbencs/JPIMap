@@ -16,7 +16,7 @@ map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 $(document).ready(function () {
   $.ajax({
     type: "GET",
-    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRl7MGozDKDt0-4bhsq0G8NNxukydvq0KVdMqTrDFZKgfNfx4SJE3QSVSnqxV0ee1ZNonNcXFx0k-c/pub?gid=0&single=true&output=csv",
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQPVl2Tb4rRDuZvzqqVQx-atYVJ5BEHQc7Necc_hQdNPqA32nyg92MN4RxJLlV9JLzjgT3pdNrHpnG/pub?gid=0&single=true&output=csv",
     dataType: "text",
     success: function (csvData) {
       makeGeoJSON(csvData);
