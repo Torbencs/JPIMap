@@ -12,7 +12,7 @@ var map = new mapboxgl.Map({
 });
 map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
-//Ajax request to get data from the google sheet
+//Ajax request to get data from the google sheet and send to makeGeoJSON function
 $(document).ready(function () {
   $.ajax({
     type: "GET",
@@ -187,11 +187,7 @@ function makeGeoJSON(csvData) {
         source: "points",
         filter: ["has", "point_count"],
         paint: {
-          // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-          // with three steps to implement three types of circles:
-          //   * Blue, 20px circles when point count is less than 100
-          //   * Yellow, 30px circles when point count is between 100 and 750
-          //   * Pink, 40px circles when point count is greater than or equal to 750
+          // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step) to increase the size of the circle as more points are clustered together
           "circle-color": "#dc5734",
           "circle-radius": ["step", ["get", "point_count"], 20, 5, 30, 10, 40],
         },
