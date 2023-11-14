@@ -77,7 +77,8 @@ $(document).ready(function () {
                     <div class="popup__subtitle">${feature.properties.Country}</div>
                     <div class="popup__categories">${categories}</div>
                     <hr class="card"/>
-                    <div class="popup__description">${feature.properties.Description}</div>`
+                    <div class="popup__description">${feature.properties.Description}</div>
+                    <a href="${feature.properties.Url} target="_blank"<div class="popup__description">View website</div></a>`
       )
       .addTo(map);
   });
@@ -135,7 +136,8 @@ function setNavList(data) {
                         <div class="popup__subtitle">${element.properties.Country}</div>
                         <div class="popup__categories">${element.properties.Categories}</div> 
                         <hr class="card"/>
-                        <div class="popup__description">${element.properties.Description}</div>`
+                        <div class="popup__description">${element.properties.Description}</div>
+                        <a href="${element.properties.Url} target="_blank"<div class="popup__description">View website</div></a>`
         )
         .addTo(map);
 
