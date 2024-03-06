@@ -1,70 +1,91 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset='utf-8' />
-    <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
     <title></title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css' rel='stylesheet' />
-    <script src='https://npmcdn.com/csv2geojson@latest/csv2geojson.js'></script>
-    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.js"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://npmcdn.com/csv2geojson@latest/csv2geojson.js"></script>
+    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0"
+      crossorigin="anonymous"
+    />
 
-    <link href='style.css' rel="stylesheet">
+    <link href="style.css" rel="stylesheet" />
     <style>
-        select {
-            width: 250px;
-        }
+      select {
+        width: 250px;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
-    <div id='map'></div>
+  <body>
+    <div id="map"></div>
     <div id="sideNav">
-        <div class="filter__container">
-            <h3>Filters</h3>
-            <div class="filter__field">
-                <p class="filter__field__title">Country</p>
-                <select id="select--country" multiple multiselect-search="true" multiselect-select-all="false"
-                    multiselect-max-items="4" multiselect-hide-x="false" onchange="filterMap()">
-                    <option selected value="Romania">Romania</option>
-                    <option selected value="Netherlands">Netherlands</option>
-                    <option selected value="Sweden">Sweden</option>
-                    <option selected value="Spain">Spain</option>
-                    <option selected value="France">France</option>
-                </select>
-            </div>
-            <div class="filter__field">
-                <p class="filter__field__title">Categories</p>
-                <select id="select--tag" multiple multiselect-search="true" multiselect-select-all="false"
-                    multiselect-max-items="4" multiselect-hide-x="false" onchange="filterMap()">
-                    <option value="Workshop">Workshop</option>
-                    <option value="Environmental Education">Environmental Education</option>
-                    <option value="Climate adaptation">Climate adaptation</option>
-                    <option value="Network facilitation">Network facilitation</option>
-                    <option value="Circular economy">Circular economy</option>
-                    <option value="Social practices">Social practices</option>
-                    <option value="Food">Food</option>
-                    <option value="Green infrastructure">Green infrastructure</option>
-                    <option value="Community Development">Community Development</option>
-                    <option value="Urban agriculture">Urban agriculture</option>
-                </select>
-            </div>
+      <div class="filter__container">
+        <h3>Filters</h3>
+        <div class="filter__field">
+          <p class="filter__field__title">Country</p>
+          <select
+            id="select--country"
+            multiple
+            multiselect-search="true"
+            multiselect-select-all="false"
+            multiselect-max-items="4"
+            multiselect-hide-x="false"
+            onchange="filterMap()"
+          >
+            <option selected value="Romania">Romania</option>
+            <option selected value="Netherlands">Netherlands</option>
+            <option selected value="Sweden">Sweden</option>
+            <option selected value="Spain">Spain</option>
+            <option selected value="France">France</option>
+          </select>
         </div>
-        <div class="sideNav__list__container customScrollStyle">
-            <ul id="sideNav__list" class="square">
-            </ul>
+        <div class="filter__field">
+          <p class="filter__field__title">Categories</p>
+          <select
+            id="select--tag"
+            multiple
+            multiselect-search="true"
+            multiselect-select-all="false"
+            multiselect-max-items="4"
+            multiselect-hide-x="false"
+            onchange="filterMap()"
+          >
+            <option value="Workshop">Workshop</option>
+            <option value="Environmental Education">
+              Environmental Education
+            </option>
+            <option value="Climate adaptation">Climate adaptation</option>
+            <option value="Network facilitation">Network facilitation</option>
+            <option value="Circular economy">Circular economy</option>
+            <option value="Social practices">Social practices</option>
+            <option value="Food">Food</option>
+            <option value="Green infrastructure">Green infrastructure</option>
+            <option value="Community Development">Community Development</option>
+            <option value="Urban agriculture">Urban agriculture</option>
+          </select>
         </div>
+      </div>
+      <div class="sideNav__list__container customScrollStyle">
+        <ul id="sideNav__list" class="square"></ul>
+      </div>
     </div>
-
 
     <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript" src="requirements/multiSelect.js"></script>
-</body>
-
+  </body>
 </html>

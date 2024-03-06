@@ -46,6 +46,9 @@ $(document).ready(function () {
     currentPopup.length && currentPopup[0].remove();
     //Get clicked feature
     let feature = map.queryRenderedFeatures(e.point)[0];
+
+    //Get url
+    const url = feature.properties.Url;
     //Get coordinates from feature
     var coordinates = feature.geometry.coordinates.slice();
     //Get category list in a readable formate
@@ -74,11 +77,18 @@ $(document).ready(function () {
       .setLngLat(coordinates)
       .setHTML(
         `<h2 class="popup__title">${feature.properties.Title}</h2>
-                    <div class="popup__subtitle">${feature.properties.Country}</div>
+                    <div class="popup__subtitle">${
+                      feature.properties.Country
+                    }</div>
                     <div class="popup__categories">${categories}</div>
                     <hr class="card"/>
-                    <div class="popup__description">${feature.properties.Description}</div>
-                    <a href="${feature.properties.Url} target="_blank"<div class="popup__description">View website</div></a>`
+                    <div class="popup__description">${
+                      feature.properties.Description
+                    }</div>
+                    ${
+                      url &&
+                      `<a href="${feature.properties.Url}" target="_blank"<div class="popup__description">View website</div></a >`
+                    }`
       )
       .addTo(map);
   });
@@ -115,6 +125,7 @@ function setNavList(data) {
   list.innerHTML = "";
   //For each feature in supplied geoJson make a list item and add it to the element
   data.features.forEach((element) => {
+    const url = element.properties.Url;
     let li = document.createElement("li");
     li.innerText = element.properties.Title;
     li.classList.add("sideNav__li");
@@ -133,11 +144,20 @@ function setNavList(data) {
         .setLngLat(element.geometry.coordinates.slice())
         .setHTML(
           `<h2 class="popup__title">${element.properties.Title}</h2>
-                        <div class="popup__subtitle">${element.properties.Country}</div>
-                        <div class="popup__categories">${element.properties.Categories}</div> 
+                        <div class="popup__subtitle">${
+                          element.properties.Country
+                        }</div>
+                        <div class="popup__categories">${
+                          element.properties.Categories
+                        }</div> 
                         <hr class="card"/>
-                        <div class="popup__description">${element.properties.Description}</div>
-                        <a href="${element.properties.Url} target="_blank"<div class="popup__description">View website</div></a>`
+                        <div class="popup__description">${
+                          element.properties.Description
+                        }</div>
+                        ${
+                          url &&
+                          `<a href="${element.properties.Url}" target="_blank" <div class="popup__description">View website</div></a>`
+                        }`
         )
         .addTo(map);
 
